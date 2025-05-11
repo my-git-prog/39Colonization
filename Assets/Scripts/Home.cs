@@ -1,131 +1,50 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Home : MonoBehaviour
 {
-    [SerializeField] private int _startingUnitsCount;
-    [SerializeField] private SpawnerUnits _spawnerUnits;
     [SerializeField] private SpawnerResources _spawnerResources;
-    [SerializeField] private float _minimumScanningRadius;
-    [SerializeField] private float _maximumScanningRadius;
-    [SerializeField] private float _stepScanningRadius;
+    [SerializeField] private HomeResourcesScanner _resourcesScanner;
+    [SerializeField] private HomeUnitsOrganizer _unitsOrganizer;
     [SerializeField] private float _periodScanningResources;
-    [SerializeField] private float _maximumResourcesPositionY;
-    [SerializeField] private float _unitsOutcomingDistance;
-    [SerializeField] private float _periodSendingUnits;
     [SerializeField] private int _costOfUnit;
 
     private int _resources = 0;
-    private List<Unit> _freeUnits;
-    private List<Unit> _workingUnits;
-    private Dictionary<Unit, Resource> _findedResources;
-    private Queue<Unit> _waitingSandingUnits;
     private bool _isAlive = true;
-
-    private void Awake()
-    {
-        _freeUnits = new List<Unit>();
-        _workingUnits = new List<Unit>();
-        _findedResources = new Dictionary<Unit, Resource>();
-        _waitingSandingUnits = new Queue<Unit>();
-    }
 
     private void Start()
     {
-        for (int i = 0; i < _startingUnitsCount; i++)
-        {
-            CreateNewUnit();
-        }
-
-        StartCoroutine(PeriodicalScanForResources());
         StartCoroutine(PeriodicalSendUnitsToResources());
     }
 
-    private void ScanForResources()
+    private void OnEnable()
     {
-        if (_freeUnits.Count == 0)
-            return;
-        
-        for (float r = _minimumScanningRadius; r <= _maximumScanningRadius; r += _stepScanningRadius)
-        {
-            Collider[] colliders = Physics.OverlapSphere(transform.position, r);
-
-            foreach (Collider collider in colliders)
-            {
-                if(collider.gameObject.transform.position.y  < _maximumResourcesPositionY)
-                {
-                    if (collider.gameObject.TryGetComponent(out Resource resource))
-                    {
-                        if (_findedResources.ContainsValue(resource) == false)
-                        {
-                            if(resource.IsFree)
-                            {
-                                Unit unit = _freeUnits[0];
-
-                                SendUnitToResource(unit, resource);
-
-                                if (_freeUnits.Count == 0)
-                                    return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        _unitsOrganizer.ResourceNotBringed += _resourcesScanner.RemoveFromFinded;
+        _unitsOrganizer.ResourceBringed += _resourcesScanner.RemoveFromFinded;
+        _unitsOrganizer.ResourceBringed += OnResourceReceived;
     }
 
-    private void SendUnitToResource(Unit unit, Resource resource)
+    private void OnDisable()
     {
-        _findedResources.Add(unit, resource);
-        _freeUnits.Remove(unit);
-        _workingUnits.Add(unit);
-        unit.transform.position = transform.position + (resource.transform.position - transform.position).normalized * _unitsOutcomingDistance;
-        unit.FindResource(resource.transform.position);
-        _waitingSandingUnits.Enqueue(unit);
+        _unitsOrganizer.ResourceNotBringed -= _resourcesScanner.RemoveFromFinded;
+        _unitsOrganizer.ResourceBringed -= _resourcesScanner.RemoveFromFinded;
+        _unitsOrganizer.ResourceBringed -= OnResourceReceived;
     }
-
-    private IEnumerator PeriodicalScanForResources()
-    {
-        var wait = new WaitForSeconds(_periodScanningResources);
-        
-        while(_isAlive)
-        {
-            ScanForResources();
-
-            yield return wait;
-        }
-    } 
 
     private IEnumerator PeriodicalSendUnitsToResources()
     {
-        var wait = new WaitForSeconds(_periodSendingUnits);
+        var wait = new WaitForSeconds(_periodScanningResources);
 
         while(_isAlive)
         {
-            if(_waitingSandingUnits.Count > 0)
-            {
-                Unit unit = _waitingSandingUnits.Dequeue();
-                unit.gameObject.SetActive(true);
-                unit.ResourceBringed += OnResourceBringed;
-                unit.UnitReturned += OnUnitReturned;
-            }
+            if (_unitsOrganizer.FreeUnitsCount > 0)
+                _unitsOrganizer.SendUnitsToResources(_resourcesScanner.GetResources(_unitsOrganizer.FreeUnitsCount));
 
             yield return wait;
         }
     }
 
-    private void OnUnitReturned(Unit unit)
-    {
-        _workingUnits.Remove(unit);
-        _freeUnits.Add(unit);
-        _findedResources.Remove(unit);
-        unit.ResourceBringed -= OnResourceBringed;
-        unit.UnitReturned -= OnUnitReturned;
-        unit.gameObject.SetActive(false);
-    }
-
-    private void OnResourceBringed(Resource resource)
+    private void OnResourceReceived(Resource resource)
     {
         _resources++;
         _spawnerResources.ReleaseItem(resource);
@@ -133,14 +52,7 @@ public class Home : MonoBehaviour
         if (_resources >= _costOfUnit)
         {
             _resources -= _costOfUnit;
-            CreateNewUnit();
+            _unitsOrganizer.CreateUnit();
         }
-    }
-
-    private void CreateNewUnit()
-    {
-        Unit unit = _spawnerUnits.GetItem();
-        unit.Initialize(this);
-        _freeUnits.Add(unit);
     }
 }

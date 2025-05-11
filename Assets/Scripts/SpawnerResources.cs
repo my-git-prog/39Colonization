@@ -1,15 +1,15 @@
 using System.Collections;
 using UnityEngine;
 
-public class SpawnerResources : Spawner<Resource>
+public class SpawnerResources : Pool<Resource>
 {
-    [SerializeField] private float _periodOfSpawn = 1f;
-    [SerializeField] private bool _isSpawning = true;
-    [SerializeField] private float _minimumPositionX = -10f;
-    [SerializeField] private float _maximumPositionX = 10f;
-    [SerializeField] private float _minimumPositionZ = -10f;
-    [SerializeField] private float _maximumPositionZ = 10f;
-    [SerializeField] private float _positionY = 1f;
+    [SerializeField] private float _periodOfSpawn;
+    [SerializeField] private bool _isSpawning;
+    [SerializeField] private float _minimumPositionX;
+    [SerializeField] private float _maximumPositionX;
+    [SerializeField] private float _minimumPositionZ;
+    [SerializeField] private float _maximumPositionZ;
+    [SerializeField] private float _positionY;
 
     private void Start()
     {

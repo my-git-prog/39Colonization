@@ -1,74 +1,56 @@
-using System;
 using UnityEngine;
 
 public class Unit : MonoBehaviour, ISpawnable
 {
     [SerializeField] private UnitResourceFinder _resourceFinder;
-    [SerializeField] private UnitHomeFinder _homeFinder;
     [SerializeField] private UnitResourcePicker _resourcePicker;
     [SerializeField] private UnitMover _mover;
 
-    private Vector3 _targetPosition;
-    private Vector3 _homePosition;
-
-    public Action<Resource> ResourceBringed;
-    public Action<Unit> UnitReturned;
+    private Resource _targetResource;
 
     private void OnEnable()
     {
         _resourceFinder.Finded += OnResourceFinded;
-        _homeFinder.Finded += OnHomeFinded;
-        _mover.Reached += OnMoveTargetReached;
+        _mover.TargetReached += ReturnBase;
     }
 
     private void OnDisable()
     {
         _resourceFinder.Finded -= OnResourceFinded;
-        _homeFinder.Finded -= OnHomeFinded;
+        _mover.TargetReached -= ReturnBase;
     }
 
-    public void Initialize(Home home)
+    public void Initialize(Vector3 position)
     {
-        _homePosition = home.transform.position;
-        _homeFinder.Initialize(home);
-        transform.position = home.transform.position;
+        _mover.Initialize(position);
+        transform.position = position;
         gameObject.SetActive(false);
     }
 
     private void OnResourceFinded(Resource resource)
     {
-        _resourcePicker.gameObject.SetActive(true);
-        _resourcePicker.SetResource(resource);
-        ReturnBase();
-    }
-
-    private void OnMoveTargetReached()
-    {
-        ReturnBase();
-    }
-
-    private void OnHomeFinded()
-    {
-        if(_resourcePicker.HasResource)
+        if (resource == _targetResource)
         {
-            ResourceBringed?.Invoke(_resourcePicker.GetResource());
-            _resourcePicker.gameObject.SetActive(false);
+            _resourcePicker.SetResource(resource);
+            ReturnBase();
         }
-
-        UnitReturned?.Invoke(this);
     }
 
     private void ReturnBase()
     {
-        _mover.ChangeTarget(_homePosition);
+        _mover.ReturnHome();
         _resourceFinder.gameObject.SetActive(false);
-        _homeFinder.gameObject.SetActive(true);
     }
 
-    public void FindResource(Vector3 position)
+    public void FindResource(Resource resource)
     {
-        _mover.ChangeTarget(position);
+        _targetResource = resource;
+        _mover.ChangeTarget(resource.transform.position);
         _resourceFinder.gameObject.SetActive(true);
-        _homeFinder.gameObject.SetActive(false);
+    }
+
+    public Resource GetResource()
+    {
+        return _resourcePicker.GetResource();
     }
 }

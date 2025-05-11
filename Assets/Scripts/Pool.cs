@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Spawner<T> : MonoBehaviour where T : MonoBehaviour, ISpawnable
+public class Pool<T> : MonoBehaviour where T : MonoBehaviour, ISpawnable
 {
     [SerializeField] private T _itemPrefab;
 
     private List<T> _activeItems;
     private List<T> _nonActiveItems;
 
-    public Action CountsChanged;
+    public event Action CountsChanged;
 
     public int ActiveCount => _activeItems.Count;
     public int NonActiveCount => _nonActiveItems.Count;
