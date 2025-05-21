@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class SpawnerResources : Pool<Resource>
+public class SpawnerResources : Spawner<Resource>
 {
     [SerializeField] private float _periodOfSpawn;
     [SerializeField] private bool _isSpawning;

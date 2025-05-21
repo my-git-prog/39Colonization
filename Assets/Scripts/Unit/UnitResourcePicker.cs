@@ -4,14 +4,14 @@ public class UnitResourcePicker : MonoBehaviour
 {
     private Resource _resource;
 
-    public void SetResource(Resource resource)
+    public void TakeResource(Resource resource)
     {
         _resource = resource;
         resource.transform.SetParent(transform);
         resource.ResetLocalParametres();
     }
 
-    public Resource GetResource()
+    public Resource GiveResource()
     {
         if (_resource == null)
             return null;

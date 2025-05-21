@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HomeUnitsOrganizer : MonoBehaviour
+public class HomeUnitsOrganizer : Spawner<Unit>
 {
-    [SerializeField] private PoolUnits _poolUnits;
-    [SerializeField] private int _startingUnitsCount;
+    [SerializeField] private int _minimumUnitsCount;
     [SerializeField] private float _unitsOutcomingDistance;
     [SerializeField] private float _periodSendingUnits;
     [SerializeField] private bool _isSendingUnits;
@@ -18,8 +17,11 @@ public class HomeUnitsOrganizer : MonoBehaviour
 
     public event Action<Resource> ResourceBringed;
     public event Action<Resource> ResourceNotBringed;
+    public event Action<Unit> FlagFinded;
 
     public int FreeUnitsCount => _freeUnits.Count;
+    public int UnitsCount => _freeUnits.Count + _workingUnits.Count;
+    public int MinimumUnitsCount => _minimumUnitsCount;
 
     private void Awake()
     {
@@ -31,12 +33,15 @@ public class HomeUnitsOrganizer : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < _startingUnitsCount; i++)
+        StartCoroutine(SendUnitsToWork());
+    }
+
+    public void Initialize(int startingUnitsCount)
+    {
+        for (int i = 0; i < startingUnitsCount; i++)
         {
             CreateUnit();
         }
-
-        StartCoroutine(SendUnitsToResources());
     }
 
     private void OnTriggerEnter(Collider other)
@@ -45,7 +50,7 @@ public class HomeUnitsOrganizer : MonoBehaviour
         {
             if (_busyUnitsResources.ContainsKey(unit))
             {
-                if (unit.GetResource() == null)
+                if (unit.GiveResource() == null)
                     ResourceNotBringed?.Invoke(_busyUnitsResources[unit]);
                 else
                     ResourceBringed?.Invoke(_busyUnitsResources[unit]);
@@ -60,7 +65,7 @@ public class HomeUnitsOrganizer : MonoBehaviour
 
     public void CreateUnit()
     {
-        Unit unit = _poolUnits.GetItem();
+        Unit unit = GetItem();
         unit.Initialize(transform.position);
         _freeUnits.Add(unit);
     }
@@ -84,7 +89,21 @@ public class HomeUnitsOrganizer : MonoBehaviour
         }
     }
 
-    private IEnumerator SendUnitsToResources()
+    public void SendUnitToBuildHome(Flag flag)
+    {
+        if (FreeUnitsCount > 0)
+        {
+            Unit unit = _freeUnits[0];
+            _freeUnits.Remove(unit);
+            unit.transform.position = transform.position +
+                (flag.transform.position - transform.position).normalized * _unitsOutcomingDistance;
+            unit.BuildHome(flag);
+            unit.FlagFinded += OnFlagFinded;
+            _waitingSandingUnits.Enqueue(unit);
+        }
+    }
+
+    private IEnumerator SendUnitsToWork()
     {
         var wait = new WaitForSeconds(_periodSendingUnits);
 
@@ -95,5 +114,17 @@ public class HomeUnitsOrganizer : MonoBehaviour
 
             yield return wait;
         }
+    }
+
+    public void AddUnit(Unit unit)
+    {
+        _freeUnits.Add(unit);
+        unit.Initialize(transform.position);
+    }
+
+    private void OnFlagFinded(Unit unit)
+    {
+        unit.FlagFinded -= OnFlagFinded;
+        FlagFinded?.Invoke(unit);
     }
 }

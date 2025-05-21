@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent (typeof(Rigidbody))]
-public class Resource : MonoBehaviour, ISpawnable
+public class Resource : MonoBehaviour, ISpawnable, IFindable
 {
     private Rigidbody _rigidbody;
 

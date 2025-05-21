@@ -127,6 +127,74 @@
                     "isPartOfComposite": true
                 }
             ]
+        },
+        {
+            "name": "Mouse",
+            "id": "be034c27-2636-42b5-9402-af01126b45d5",
+            "actions": [
+                {
+                    "name": "Position",
+                    "type": "Value",
+                    "id": "a1a1c11e-203c-4f46-99b1-3ae1f5b1a26f",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "LeftButtonClick",
+                    "type": "Button",
+                    "id": "5a735073-b8f4-470e-a586-449bda8e870e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RightButtonClick",
+                    "type": "Button",
+                    "id": "a2219359-8a45-4cb4-b308-49a66863b03f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "4b870711-1c46-46cd-a913-688f98720498",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "Position",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "269d2995-65c2-4374-a8b9-e172ba41c0a3",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "LeftButtonClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "762d2bea-0f03-44e9-bf5a-efbb954a3393",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard and Mouse",
+                    "action": "RightButtonClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [

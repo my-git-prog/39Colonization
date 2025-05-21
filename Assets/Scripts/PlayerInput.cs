@@ -149,6 +149,74 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": true
                 }
             ]
+        },
+        {
+            ""name"": ""Mouse"",
+            ""id"": ""be034c27-2636-42b5-9402-af01126b45d5"",
+            ""actions"": [
+                {
+                    ""name"": ""Position"",
+                    ""type"": ""Value"",
+                    ""id"": ""a1a1c11e-203c-4f46-99b1-3ae1f5b1a26f"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""LeftButtonClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""5a735073-b8f4-470e-a586-449bda8e870e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RightButtonClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""a2219359-8a45-4cb4-b308-49a66863b03f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""4b870711-1c46-46cd-a913-688f98720498"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard and Mouse"",
+                    ""action"": ""Position"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""269d2995-65c2-4374-a8b9-e172ba41c0a3"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard and Mouse"",
+                    ""action"": ""LeftButtonClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""762d2bea-0f03-44e9-bf5a-efbb954a3393"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard and Mouse"",
+                    ""action"": ""RightButtonClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": [
@@ -173,11 +241,17 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         // Camera
         m_Camera = asset.FindActionMap("Camera", throwIfNotFound: true);
         m_Camera_Move = m_Camera.FindAction("Move", throwIfNotFound: true);
+        // Mouse
+        m_Mouse = asset.FindActionMap("Mouse", throwIfNotFound: true);
+        m_Mouse_Position = m_Mouse.FindAction("Position", throwIfNotFound: true);
+        m_Mouse_LeftButtonClick = m_Mouse.FindAction("LeftButtonClick", throwIfNotFound: true);
+        m_Mouse_RightButtonClick = m_Mouse.FindAction("RightButtonClick", throwIfNotFound: true);
     }
 
     ~@PlayerInput()
     {
         UnityEngine.Debug.Assert(!m_Camera.enabled, "This will cause a leak and performance issues, PlayerInput.Camera.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Mouse.enabled, "This will cause a leak and performance issues, PlayerInput.Mouse.Disable() has not been called.");
     }
 
     public void Dispose()
@@ -281,6 +355,68 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
         }
     }
     public CameraActions @Camera => new CameraActions(this);
+
+    // Mouse
+    private readonly InputActionMap m_Mouse;
+    private List<IMouseActions> m_MouseActionsCallbackInterfaces = new List<IMouseActions>();
+    private readonly InputAction m_Mouse_Position;
+    private readonly InputAction m_Mouse_LeftButtonClick;
+    private readonly InputAction m_Mouse_RightButtonClick;
+    public struct MouseActions
+    {
+        private @PlayerInput m_Wrapper;
+        public MouseActions(@PlayerInput wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Position => m_Wrapper.m_Mouse_Position;
+        public InputAction @LeftButtonClick => m_Wrapper.m_Mouse_LeftButtonClick;
+        public InputAction @RightButtonClick => m_Wrapper.m_Mouse_RightButtonClick;
+        public InputActionMap Get() { return m_Wrapper.m_Mouse; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(MouseActions set) { return set.Get(); }
+        public void AddCallbacks(IMouseActions instance)
+        {
+            if (instance == null || m_Wrapper.m_MouseActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_MouseActionsCallbackInterfaces.Add(instance);
+            @Position.started += instance.OnPosition;
+            @Position.performed += instance.OnPosition;
+            @Position.canceled += instance.OnPosition;
+            @LeftButtonClick.started += instance.OnLeftButtonClick;
+            @LeftButtonClick.performed += instance.OnLeftButtonClick;
+            @LeftButtonClick.canceled += instance.OnLeftButtonClick;
+            @RightButtonClick.started += instance.OnRightButtonClick;
+            @RightButtonClick.performed += instance.OnRightButtonClick;
+            @RightButtonClick.canceled += instance.OnRightButtonClick;
+        }
+
+        private void UnregisterCallbacks(IMouseActions instance)
+        {
+            @Position.started -= instance.OnPosition;
+            @Position.performed -= instance.OnPosition;
+            @Position.canceled -= instance.OnPosition;
+            @LeftButtonClick.started -= instance.OnLeftButtonClick;
+            @LeftButtonClick.performed -= instance.OnLeftButtonClick;
+            @LeftButtonClick.canceled -= instance.OnLeftButtonClick;
+            @RightButtonClick.started -= instance.OnRightButtonClick;
+            @RightButtonClick.performed -= instance.OnRightButtonClick;
+            @RightButtonClick.canceled -= instance.OnRightButtonClick;
+        }
+
+        public void RemoveCallbacks(IMouseActions instance)
+        {
+            if (m_Wrapper.m_MouseActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IMouseActions instance)
+        {
+            foreach (var item in m_Wrapper.m_MouseActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_MouseActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public MouseActions @Mouse => new MouseActions(this);
     private int m_KeyboardandMouseSchemeIndex = -1;
     public InputControlScheme KeyboardandMouseScheme
     {
@@ -293,5 +429,11 @@ public partial class @PlayerInput: IInputActionCollection2, IDisposable
     public interface ICameraActions
     {
         void OnMove(InputAction.CallbackContext context);
+    }
+    public interface IMouseActions
+    {
+        void OnPosition(InputAction.CallbackContext context);
+        void OnLeftButtonClick(InputAction.CallbackContext context);
+        void OnRightButtonClick(InputAction.CallbackContext context);
     }
 }

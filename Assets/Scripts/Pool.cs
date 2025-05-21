@@ -1,54 +1,35 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Pool<T> : MonoBehaviour where T : MonoBehaviour, ISpawnable
+public class Pool<T> where T : MonoBehaviour, ISpawnable
 {
-    [SerializeField] private T _itemPrefab;
-
-    private List<T> _activeItems;
     private List<T> _nonActiveItems;
 
-    public event Action CountsChanged;
-
-    public int ActiveCount => _activeItems.Count;
     public int NonActiveCount => _nonActiveItems.Count;
 
-    private void Awake()
+    public Pool()
     {
-        _activeItems = new List<T>();
         _nonActiveItems = new List<T>();
-    }
-
-    public T GetItem()
-    {
-        T item;
-
-        if(_nonActiveItems.Count > 0)
-        {
-            item = _nonActiveItems[0];
-            _nonActiveItems.Remove(item);
-        }
-        else
-        {
-            item = Instantiate(_itemPrefab);
-        }
-
-        _activeItems.Add(item);
-        CountsChanged?.Invoke();
-
-        return item;
     }
 
     public void ReleaseItem(T item)
     {
-        if(_activeItems.Contains(item))
+        _nonActiveItems.Add(item);
+        item.gameObject.SetActive(false);
+    }
+
+    public bool TryGetItem(out T item)
+    {
+        if ( _nonActiveItems.Count > 0)
         {
-            _activeItems.Remove(item);
-            _nonActiveItems.Add(item);
+            item = _nonActiveItems[0];
+            _nonActiveItems.Remove(item);
+
+            return true;
         }
 
-        item.gameObject.SetActive(false);
-        CountsChanged?.Invoke();
+        item = null;
+
+        return false;
     }
 }
