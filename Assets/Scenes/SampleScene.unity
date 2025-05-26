@@ -549,7 +549,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _itemPrefab: {fileID: 7092209862631512845, guid: cb56bf74503fafe41912fd8876000171, type: 3}
-  _periodOfSpawn: 0.2
+  _periodOfSpawn: 0.05
   _isSpawning: 1
   _minimumPositionX: -80
   _maximumPositionX: 80

@@ -19,7 +19,7 @@ public class BuildingBuilder : MonoBehaviour
     {
         foreach (var home in _homes)
         {
-            home.HomeBuilding -= OnHomeBuilding;
+            home.HomeBuildingPrepared -= OnHomeBuilding;
         }
     }
 
@@ -27,7 +27,7 @@ public class BuildingBuilder : MonoBehaviour
     {
         Home home = Instantiate(_homePrefab, position, Quaternion.identity);
         home.Initialize(_spawnerResources, _camera, startUnitsCount);
-        home.HomeBuilding += OnHomeBuilding;
+        home.HomeBuildingPrepared += OnHomeBuilding;
         _homes.Add(home);
 
         if (firstUnit != null)

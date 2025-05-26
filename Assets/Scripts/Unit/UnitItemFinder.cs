@@ -12,5 +12,4 @@ public class UnitItemFinder<T> : MonoBehaviour where T : IFindable
             Finded?.Invoke(item);
         }
     }
-
 }

@@ -16,7 +16,7 @@ public class Home : MonoBehaviour, ISelectable
     private bool _isAlive = true;
     private bool _isBuildingNewHome = false;
 
-    public event Action<Vector3, Unit> HomeBuilding;
+    public event Action<Vector3, Unit> HomeBuildingPrepared;
 
     private void Start()
     {
@@ -37,6 +37,24 @@ public class Home : MonoBehaviour, ISelectable
         _unitsOrganizer.ResourceBringed -= _resourcesScanner.RemoveFromFinded;
         _unitsOrganizer.ResourceBringed -= OnResourceReceived;
         _flagInstaller.Installed -= OnFlagInstalled;
+    }
+
+    public void Select()
+    {
+        _flagInstaller.gameObject.SetActive(true);
+        _flagInstaller.ChoseFlagPlace();
+    }
+
+    public void Initialize(SpawnerResources spawnerResources, Camera camera, int startingUnitsCount = 0)
+    {
+        _spawnerResources = spawnerResources;
+        _flagInstaller.SetCamera(camera);
+        _unitsOrganizer.Initialize(startingUnitsCount);
+    }
+
+    public void AddUnit(Unit unit)
+    {
+        _unitsOrganizer.AddUnit(unit);
     }
 
     private IEnumerator PeriodicalSendUnitsToWork()
@@ -70,21 +88,13 @@ public class Home : MonoBehaviour, ISelectable
         _spawnerResources.ReleaseItem(resource);
 
         if (_isBuildingNewHome && _unitsOrganizer.UnitsCount > _unitsOrganizer.MinimumUnitsCount)
-        {
             return;
-        }
 
-        else if (_resources >= _costOfUnit)
+        if (_resources >= _costOfUnit)
         {
             _resources -= _costOfUnit;
             _unitsOrganizer.CreateUnit();
         }
-    }
-
-    public void Select()
-    {
-        _flagInstaller.gameObject.SetActive(true);
-        _flagInstaller.ChoseFlagPlace();
     }
 
     private void OnFlagInstalled()
@@ -92,21 +102,9 @@ public class Home : MonoBehaviour, ISelectable
         _isBuildingNewHome = true;
     }
 
-    public void Initialize(SpawnerResources spawnerResources, Camera camera, int startingUnitsCount = 0)
-    {
-        _spawnerResources = spawnerResources;
-        _flagInstaller.SetCamera(camera);
-        _unitsOrganizer.Initialize(startingUnitsCount);
-    }
-
-    public void AddUnit(Unit unit)
-    {
-        _unitsOrganizer.AddUnit(unit);
-    }
-
     private void OnFlagFinded(Unit unit)
     {
         _unitsOrganizer.FlagFinded -= OnFlagFinded;
-        HomeBuilding?.Invoke(_flagInstaller.InstalledFlag.transform.position, unit);
+        HomeBuildingPrepared?.Invoke(_flagInstaller.InstalledFlag.transform.position, unit);
     }
 }
